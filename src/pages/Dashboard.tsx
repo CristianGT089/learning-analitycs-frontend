@@ -67,72 +67,6 @@ const Dashboard: React.FC = () => {
     loadDashboardData()
   }, [])
 
-        console.log('API Responses:', {
-          authUsers: authUsers.status === 'fulfilled' ? authUsers.value?.length || 0 : 'error',
-          eventsStats: eventsStats.status === 'fulfilled' ? eventsStats.value?.total_events || 0 : 'error',
-          riskAlerts: riskAlerts.status === 'fulfilled' ? riskAlerts.value?.length || 0 : 'error',
-          alertStats: alertStats.status === 'fulfilled' ? alertStats.value?.unacknowledged_alerts || 0 : 'error'
-        })
-
-        const errors = []
-        if (authUsers.status === 'rejected') errors.push('Servicio de autenticación')
-        if (eventsStats.status === 'rejected') errors.push('Estadísticas de eventos')
-        if (riskAlerts.status === 'rejected') errors.push('Alertas de riesgo')
-        if (riskStats.status === 'rejected') errors.push('Estadísticas de riesgo')
-        if (alertStats.status === 'rejected') errors.push('Gestión de alertas')
-
-        const safeAuthUsers = authUsers.status === 'fulfilled' ? authUsers.value : []
-        const safeEventsStats = eventsStats.status === 'fulfilled' ? eventsStats.value : { total_events: 0 }
-        const safeRiskAlerts = riskAlerts.status === 'fulfilled' ? riskAlerts.value : []
-        const safeRiskStats = riskStats.status === 'fulfilled' ? riskStats.value : { users_at_risk: 0, risk_distribution: { high: 0, medium: 0, low: 0 } }
-        const safeAlertStats = alertStats.status === 'fulfilled' ? alertStats.value : { unacknowledged_alerts: 0 }
-
-        // Calcular estadísticas combinadas
-        const totalStudents = safeAuthUsers?.length || 0
-        const atRiskStudents = safeRiskStats?.users_at_risk || 0
-        const activeAlerts = safeAlertStats?.unacknowledged_alerts || 0
-        const totalEvents = safeEventsStats?.total_events || 0
-        const institutions = new Set(safeAuthUsers?.map((user: any) => user.institution).filter(Boolean)).size || 0
-
-        setStats({
-          totalStudents,
-          atRiskStudents,
-          activeAlerts,
-          totalEvents,
-          institutions
-        })
-        
-        if (errors.length > 0) {
-          setError(`Algunos servicios no están disponibles: ${errors.join(', ')}`)
-        } else {
-          setError(null)
-        }
-      } catch (error) {
-        console.error('Error al cargar estadísticas:', error)
-        setError('Algunos servicios no están disponibles. Mostrando datos de ejemplo.')
-        // Fallback a datos de prueba en caso de error
-        setStats({
-          totalStudents: 1250,
-          atRiskStudents: 89,
-          activeAlerts: 23,
-          totalEvents: 45230,
-          institutions: 15
-        })
-        } finally {
-          console.log('Dashboard: Finalizando fetch, setLoading(false)')
-          setIsLoading(false)
-        }
-      }
-
-      console.log('Dashboard: Llamando a fetchDashboardStats')
-      await fetchDashboardStats()
-    } catch (error) {
-      console.error('Error en useEffect del Dashboard:', error)
-      setError('Error al cargar el dashboard. Intenta recargar la página.')
-      setIsLoading(false)
-    }
-  }, [])
-
   console.log('Dashboard: Renderizando - isLoading:', isLoading, 'error:', error)
 
   if (isLoading) {
@@ -161,38 +95,6 @@ const Dashboard: React.FC = () => {
     )
   }
 
-  const riskData = [
-    { name: 'Bajo', value: 85, color: '#4caf50' },
-    { name: 'Medio', value: 12, color: '#ff9800' },
-    { name: 'Alto', value: 3, color: '#f44336' },
-  ]
-
-  const eventTypes = [
-    { name: 'Login', value: 12000 },
-    { name: 'Page View', value: 15000 },
-    { name: 'Assignment', value: 8000 },
-    { name: 'Quiz', value: 5000 },
-    { name: 'Forum', value: 5230 },
-  ]
-
-  const trendData = [
-    { date: '01/01', events: 5230 },
-    { date: '02/01', events: 6120 },
-    { date: '03/01', events: 5890 },
-    { date: '04/01', events: 6450 },
-    { date: '05/01', events: 6780 },
-    { date: '06/01', events: 7120 },
-    { date: '07/01', events: 6890 },
-  ]
-
-  const statCards = [
-    { label: 'Total Estudiantes', value: stats.totalStudents.toLocaleString(), color: undefined },
-    { label: 'En Riesgo', value: stats.atRiskStudents, color: 'error' as const },
-    { label: 'Alertas Activas', value: stats.activeAlerts, color: 'warning.main' },
-    { label: 'Eventos Totales', value: stats.totalEvents.toLocaleString(), color: undefined },
-    { label: 'Instituciones', value: stats.institutions, color: undefined },
-  ]
-
   console.log('Dashboard: Renderizando contenido completo')
   return (
     <Box>
@@ -211,7 +113,13 @@ const Dashboard: React.FC = () => {
       )}
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {statCards.map((card) => (
+        {[
+          { label: 'Total Estudiantes', value: stats.totalStudents.toLocaleString(), color: undefined },
+          { label: 'En Riesgo', value: stats.atRiskStudents, color: 'error' as const },
+          { label: 'Alertas Activas', value: stats.activeAlerts, color: 'warning.main' },
+          { label: 'Eventos Totales', value: stats.totalEvents.toLocaleString(), color: undefined },
+          { label: 'Instituciones', value: stats.institutions, color: undefined },
+        ].map((card) => (
           <Grid key={card.label} sx={{ width: { xs: '100%', sm: '50%', md: '20%' } }}>
             <Card>
               <CardContent>
@@ -227,74 +135,52 @@ const Dashboard: React.FC = () => {
         ))}
       </Grid>
 
-       <Grid container spacing={3}>
-         <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
-           <Card>
-             <CardContent>
-               <Typography variant="h6" gutterBottom>
-                 Distribución de Riesgo Académico
-               </Typography>
-               {/* <ResponsiveContainer width="100%" height={300}>
-                 <PieChart>
-                   <Pie
-                     data={riskData}
-                     dataKey="value"
-                     nameKey="name"
-                     cx="50%"
-                     cy="50%"
-                     outerRadius={80}
-                     label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
-                   >
-                     {riskData.map((entry, index) => (
-                       <Cell key={`cell-${index}`} fill={entry.color} />
-                     ))}
-                   </Pie>
-                   <Tooltip />
-                 </PieChart>
-               </ResponsiveContainer> */}
-             </CardContent>
-           </Card>
-         </Grid>
+      <Grid container spacing={3}>
+        <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Distribución de Riesgo Académico
+              </Typography>
+              <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Typography color="text.secondary">
+                  Gráfico de distribución de riesgo (ejemplo)
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
 
-         <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
-           <Card>
-             <CardContent>
-               <Typography variant="h6" gutterBottom>
-                 Eventos por Tipo
-               </Typography>
-               {/* <ResponsiveContainer width="100%" height={300}>
-                 <BarChart data={eventTypes}>
-                   <CartesianGrid strokeDasharray="3 3" />
-                   <XAxis dataKey="name" />
-                   <YAxis />
-                   <Tooltip />
-                   <Bar dataKey="value" fill="#8884d8" name="Eventos" />
-                 </BarChart>
-               </ResponsiveContainer> */}
-             </CardContent>
-           </Card>
-         </Grid>
+        <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Eventos por Tipo
+              </Typography>
+              <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Typography color="text.secondary">
+                  Gráfico de eventos por tipo (ejemplo)
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
 
-         <Grid sx={{ width: '100%' }}>
-           <Card>
-             <CardContent>
-               <Typography variant="h6" gutterBottom>
-                 Tendencia de Eventos (Últimos 7 días)
-               </Typography>
-               {/* <ResponsiveContainer width="100%" height={300}>
-                 <LineChart data={trendData}>
-                   <CartesianGrid strokeDasharray="3 3" />
-                   <XAxis dataKey="date" />
-                   <YAxis />
-                   <Tooltip />
-                   <Legend />
-                   <Line type="monotone" dataKey="events" stroke="#8884d8" name="Eventos" />
-                 </LineChart>
-               </ResponsiveContainer> */}
-             </CardContent>
-           </Card>
-         </Grid>
-       </Grid>
+        <Grid sx={{ width: '100%' }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Tendencia de Eventos (Últimos 7 días)
+              </Typography>
+              <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Typography color="text.secondary">
+                  Gráfico de tendencia de eventos (ejemplo)
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Box>
   )
 }
