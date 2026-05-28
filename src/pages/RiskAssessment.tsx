@@ -310,7 +310,7 @@ const RiskAssessment: React.FC = () => {
             <Typography variant="body1" gutterBottom>
               <strong>Factores Identificados:</strong>
               <Box sx={{ mt: 1, ml: 2 }}>
-                {selectedAlert?.factors.map((factor: string, index: number) => (
+                {(selectedAlert?.factors ?? []).map((factor: string, index: number) => (
                   <Chip
                     key={index}
                     label={factor.replace('_', ' ')}
@@ -325,7 +325,7 @@ const RiskAssessment: React.FC = () => {
             <Typography variant="body1" gutterBottom>
               <strong>Recomendaciones:</strong>
               <Box sx={{ mt: 1, ml: 2 }}>
-                {selectedAlert?.recommendations.map((recommendation: string, index: number) => (
+                {(selectedAlert?.recommendations ?? []).map((recommendation: string, index: number) => (
                   <Typography key={index} variant="body2" sx={{ mb: 0.5 }}>
                     • {recommendation}
                   </Typography>

@@ -1,6 +1,6 @@
 import api from './api'
 
-const EVENT_SERVICE_URL = import.meta.env.VITE_EVENT_SERVICE_URL || 'https://event-service-production-e1c9.up.railway.app'
+const EVENT_SERVICE_URL = import.meta.env.VITE_API_URL || 'https://gateway-production-bc87.up.railway.app'
 
 export interface EventStats {
   total_events: number

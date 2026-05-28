@@ -1,6 +1,6 @@
 import api from './api'
 
-const RISK_SERVICE_URL = import.meta.env.VITE_RISK_SERVICE_URL || 'https://academic-risk-service-production.up.railway.app'
+const RISK_SERVICE_URL = import.meta.env.VITE_API_URL || 'https://gateway-production-bc87.up.railway.app'
 
 export interface RiskAlert {
   id: string
@@ -57,6 +57,8 @@ const mapRiskAlert = (raw: any): RiskAlert => ({
   resolved: raw.resolved ?? false,
   courseId: raw.course_id,
   instructorId: raw.instructor_id,
+  factors: raw.risk_factors ?? [],
+  recommendations: raw.recommendations ?? [],
 })
 
 export const riskService = {
