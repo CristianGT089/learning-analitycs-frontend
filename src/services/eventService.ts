@@ -17,7 +17,7 @@ export interface EventItem {
 
 export const eventService = {
   getStats: async (): Promise<EventStats> => {
-    const res = await api.get('/event-capture/api/v1/events/stats')
+    const res = await api.get('/event-capture/api/v1/stats')
     return res.data
   },
 
