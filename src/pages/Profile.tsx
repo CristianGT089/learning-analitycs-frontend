@@ -86,8 +86,8 @@ const Profile: React.FC = () => {
                   {user?.name}
                 </Typography>
                 <Chip
-                  label={user?.role === 'admin' ? 'Administrador' : user?.role === 'teacher' ? 'Docente' : 'Estudiante'}
-                  color={user?.role === 'admin' ? 'secondary' : user?.role === 'teacher' ? 'primary' : 'success'}
+                  label={user?.role === 'admin' ? 'Administrador' : user?.role === 'student' ? 'Estudiante' : 'Docente'}
+                  color={user?.role === 'admin' ? 'secondary' : user?.role === 'student' ? 'success' : 'primary'}
                   size="small"
                 />
               </Box>

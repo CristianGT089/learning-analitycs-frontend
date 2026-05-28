@@ -9,11 +9,6 @@ import {
   Alert,
 } from '@mui/material'
 import { format } from 'date-fns'
-import api from '../services/api'
-import { authService } from '../services/authService'
-import { eventService } from '../services/eventService'
-import { riskService } from '../services/riskService'
-import { alertService } from '../services/alertService'
 
 const Dashboard: React.FC = () => {
   console.log('Dashboard: Componente montado')

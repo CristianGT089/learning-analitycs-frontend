@@ -130,28 +130,27 @@ const Layout: React.FC = () => {
             </Typography>
             <List>
               {menuItems.map((item) => (
-                <ListItem
-                  key={item.path}
-                  disablePadding
-                  onClick={() => navigate(item.path)}
-                  selected={isActive(item.path)}
-                  sx={{
-                    mb: 1,
-                    borderRadius: 1,
-                    backgroundColor: isActive(item.path) ? 'primary.main' : 'transparent',
-                    color: isActive(item.path) ? 'white' : 'inherit',
-                    '&:hover': {
-                      backgroundColor: 'primary.light',
-                    },
-                  }}
-                >
-                  <ListItemButton selected={isActive(item.path)}>
-                    <ListItemIcon>
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText primary={item.label} />
-                  </ListItemButton>
-                </ListItem>
+              <ListItem
+                key={item.path}
+                disablePadding
+                onClick={() => navigate(item.path)}
+                sx={{
+                  mb: 1,
+                  borderRadius: 1,
+                  backgroundColor: isActive(item.path) ? 'primary.main' : 'transparent',
+                  color: isActive(item.path) ? 'white' : 'inherit',
+                  '&:hover': {
+                    backgroundColor: 'primary.light',
+                  },
+                }}
+              >
+                <ListItemButton selected={isActive(item.path)}>
+                  <ListItemIcon>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
               ))}
             </List>
           </Box>
