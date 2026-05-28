@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box,
   Paper,
@@ -13,6 +14,7 @@ import { useAuth } from '../contexts/AuthContext'
 
 const LoginPage: React.FC = () => {
   const { login, isLoading } = useAuth()
+  const navigate = useNavigate()
   const [formData, setFormData] = React.useState({
     username: '',
     password: '',
@@ -32,6 +34,7 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(formData)
+      navigate('/dashboard')
     } catch (err) {
       setError('Credenciales inválidas. Por favor intente nuevamente.')
     }
