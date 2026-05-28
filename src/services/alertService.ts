@@ -1,6 +1,6 @@
 import api from './api'
 
-const ALERT_SERVICE_URL = import.meta.env.VITE_API_URL || 'https://gateway-production-bc87.up.railway.app'
+const ALERT_SERVICE_URL = import.meta.env.VITE_ALERT_SERVICE_URL || 'https://alert-service-production-5655.up.railway.app'
 
 export interface AlertItem {
   id: string
