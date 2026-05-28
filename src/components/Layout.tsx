@@ -11,6 +11,11 @@ import {
   Avatar,
   Badge,
   Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material'
 import {
   Menu as MenuIcon,
@@ -123,22 +128,32 @@ const Layout: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               Menú Principal
             </Typography>
-            {menuItems.map((item) => (
-              <MenuItem
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                selected={isActive(item.path)}
-                sx={{
-                  mb: 1,
-                  borderRadius: 1,
-                  backgroundColor: isActive(item.path) ? 'primary.main' : 'transparent',
-                  color: isActive(item.path) ? 'white' : 'inherit',
-                }}
-              >
-                {item.icon}
-                <Typography sx={{ ml: 1 }}>{item.label}</Typography>
-              </MenuItem>
-            ))}
+            <List>
+              {menuItems.map((item) => (
+                <ListItem
+                  key={item.path}
+                  disablePadding
+                  onClick={() => navigate(item.path)}
+                  selected={isActive(item.path)}
+                  sx={{
+                    mb: 1,
+                    borderRadius: 1,
+                    backgroundColor: isActive(item.path) ? 'primary.main' : 'transparent',
+                    color: isActive(item.path) ? 'white' : 'inherit',
+                    '&:hover': {
+                      backgroundColor: 'primary.light',
+                    },
+                  }}
+                >
+                  <ListItemButton selected={isActive(item.path)}>
+                    <ListItemIcon>
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText primary={item.label} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
           </Box>
         </Drawer>
       </Box>
