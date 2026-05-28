@@ -21,7 +21,7 @@ export const authService = {
       username: raw.username,
       name: raw.username,
       email: raw.email,
-      role: raw.is_superuser ? 'admin' : 'student',
+      role: raw.role || 'student',
       createdAt: raw.created_at,
       updatedAt: raw.created_at,
     }
@@ -47,7 +47,7 @@ export const authService = {
       username: raw.username,
       name: raw.username,
       email: raw.email,
-      role: raw.is_superuser ? 'admin' : 'student',
+      role: raw.role || 'student',
       createdAt: raw.created_at,
       updatedAt: raw.created_at,
     }
@@ -60,7 +60,7 @@ export const authService = {
       username: raw.username,
       name: raw.username,
       email: raw.email,
-      role: raw.is_superuser ? 'admin' : 'student',
+      role: raw.role || 'student',
       createdAt: raw.created_at,
       updatedAt: raw.created_at,
     }))

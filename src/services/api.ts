@@ -22,6 +22,8 @@ api.interceptors.response.use(
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
+    } else if (error.response?.status === 403) {
+      console.warn('Access denied (403):', error.config?.url)
     }
     return Promise.reject(error)
   }

@@ -41,28 +41,35 @@ const AlertManagement: React.FC = () => {
   const [error, setError] = React.useState('')
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false)
   const [newAlert, setNewAlert] = React.useState({
-    studentId: '',
+    userId: '',
     riskLevel: 'medio',
     alertType: 'academic_risk',
     message: '',
   })
 
+  const fetchAlerts = async () => {
+    try {
+      const fetchedAlerts = await alertService.getAlerts()
+      setAlerts(fetchedAlerts)
+      setError('')
+    } catch (error) {
+      console.error('Error al cargar alertas:', error)
+      setError('No se pudieron cargar las alertas')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   React.useEffect(() => {
-    alertService.getAlerts()
-      .then(setAlerts)
-      .catch(() => setError('No se pudieron cargar las alertas'))
-      .finally(() => setIsLoading(false))
+    fetchAlerts()
   }, [])
 
   const handleAcknowledge = async (alertId: string) => {
     try {
       await alertService.acknowledge(alertId)
-      setAlerts(alerts.map(alert =>
-        alert.id === alertId
-          ? { ...alert, acknowledged: true, status: 'acknowledged' }
-          : alert
-      ))
-    } catch {
+      await fetchAlerts()
+    } catch (error) {
+      console.error('Error al reconocer alerta:', error)
       setError('No se pudo reconocer la alerta')
     }
   }
@@ -70,12 +77,9 @@ const AlertManagement: React.FC = () => {
   const handleResolve = async (alertId: string) => {
     try {
       await alertService.resolve(alertId)
-      setAlerts(alerts.map(alert =>
-        alert.id === alertId
-          ? { ...alert, resolved: true, status: 'resolved' }
-          : alert
-      ))
-    } catch {
+      await fetchAlerts()
+    } catch (error) {
+      console.error('Error al resolver alerta:', error)
       setError('No se pudo resolver la alerta')
     }
   }
@@ -88,32 +92,33 @@ const AlertManagement: React.FC = () => {
     ))
   }
 
-  const handleCreateAlert = () => {
-    const newAlertObj = {
-      id: `alert-${Date.now()}`,
-      studentId: newAlert.studentId,
-      studentName: 'Nuevo Estudiante',
-      institution: 'Universidad Nacional',
-      riskScore: 0.5,
-      riskLevel: newAlert.riskLevel,
-      alertType: newAlert.alertType,
-      message: newAlert.message,
-      timestamp: new Date().toISOString(),
-      status: 'active',
-      acknowledged: false,
-      resolved: false,
-      notificationSent: false,
-      createdBy: 'manual',
+  const handleCreateAlert = async () => {
+    if (!newAlert.userId) {
+      setError('El ID de usuario es obligatorio')
+      return
     }
-    
-    setAlerts([newAlertObj, ...alerts])
-    setCreateDialogOpen(false)
-    setNewAlert({
-      studentId: '',
-      riskLevel: 'medio',
-      alertType: 'academic_risk',
-      message: '',
-    })
+
+    try {
+      const createdAlert = await alertService.createAlert({
+        userId: newAlert.userId,
+        riskLevel: newAlert.riskLevel,
+        alertType: newAlert.alertType,
+        message: newAlert.message,
+      })
+      
+      setAlerts([createdAlert, ...alerts])
+      setCreateDialogOpen(false)
+      setNewAlert({
+        userId: '',
+        riskLevel: 'medio',
+        alertType: 'academic_risk',
+        message: '',
+      })
+      setError('')
+    } catch (error) {
+      console.error('Error al crear alerta:', error)
+      setError('No se pudo crear la alerta')
+    }
   }
 
   const handleViewDetails = (alert: any) => {
@@ -385,11 +390,11 @@ const AlertManagement: React.FC = () => {
         <DialogContent>
           <Box sx={{ mt: 2 }}>
             <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Estudiante ID</InputLabel>
+              <InputLabel>Usuario ID</InputLabel>
               <TextField
-                label="Estudiante ID"
-                value={newAlert.studentId}
-                onChange={(e) => setNewAlert({...newAlert, studentId: e.target.value})}
+                label="Usuario ID"
+                value={newAlert.userId}
+                onChange={(e) => setNewAlert({...newAlert, userId: e.target.value})}
               />
             </FormControl>
 

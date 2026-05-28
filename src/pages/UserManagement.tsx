@@ -74,7 +74,7 @@ const UserManagement: React.FC = () => {
         role: u.role,
         institution: u.institution ?? '—',
         department: u.department ?? '—',
-        status: u.is_active === false ? 'inactive' : 'active',
+        status: 'active',
         lastLogin: u.updatedAt,
         createdAt: u.createdAt,
       }))))

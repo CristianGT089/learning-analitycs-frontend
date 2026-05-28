@@ -13,15 +13,22 @@ export interface RiskAlert {
   status: string
   acknowledged: boolean
   resolved: boolean
-  factors: string[]
-  recommendations: string[]
+  courseId?: string
+  instructorId?: string
 }
 
 export interface RiskStats {
   total_users: number
-  high_risk: number
-  medium_risk: number
-  low_risk: number
+  users_at_risk: number
+  risk_distribution: {
+    low: number
+    medium: number
+    high: number
+    critical: number
+  }
+  alerts_generated: number
+  alerts_acknowledged: number
+  alerts_resolved: number
 }
 
 const mapRiskLevel = (level: string): string => {
@@ -46,8 +53,8 @@ const mapRiskAlert = (raw: any): RiskAlert => ({
   status: raw.resolved ? 'resolved' : raw.acknowledged ? 'acknowledged' : 'active',
   acknowledged: raw.acknowledged ?? false,
   resolved: raw.resolved ?? false,
-  factors: raw.risk_factors ?? [],
-  recommendations: raw.recommendations ?? [],
+  courseId: raw.course_id,
+  instructorId: raw.instructor_id,
 })
 
 export const riskService = {

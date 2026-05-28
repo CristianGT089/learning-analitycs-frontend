@@ -48,10 +48,11 @@ const Dashboard: React.FC = () => {
         // Obtener estadísticas de cada servicio usando el API centralizado
         console.log('Fetching dashboard stats...')
         
-        const [authUsers, eventsStats, riskAlerts, alertStats] = await Promise.allSettled([
+        const [authUsers, eventsStats, riskAlerts, riskStats, alertStats] = await Promise.allSettled([
           authService.getUsers(),
           eventService.getStats(),
           riskService.getAlerts(),
+          riskService.getStats(),
           alertService.getStats()
         ])
 
@@ -62,16 +63,22 @@ const Dashboard: React.FC = () => {
           alertStats: alertStats.status === 'fulfilled' ? alertStats.value?.unacknowledged_alerts || 0 : 'error'
         })
 
+        const errors = []
+        if (authUsers.status === 'rejected') errors.push('Servicio de autenticación')
+        if (eventsStats.status === 'rejected') errors.push('Estadísticas de eventos')
+        if (riskAlerts.status === 'rejected') errors.push('Alertas de riesgo')
+        if (riskStats.status === 'rejected') errors.push('Estadísticas de riesgo')
+        if (alertStats.status === 'rejected') errors.push('Gestión de alertas')
+
         const safeAuthUsers = authUsers.status === 'fulfilled' ? authUsers.value : []
         const safeEventsStats = eventsStats.status === 'fulfilled' ? eventsStats.value : { total_events: 0 }
         const safeRiskAlerts = riskAlerts.status === 'fulfilled' ? riskAlerts.value : []
+        const safeRiskStats = riskStats.status === 'fulfilled' ? riskStats.value : { users_at_risk: 0, risk_distribution: { high: 0, medium: 0, low: 0 } }
         const safeAlertStats = alertStats.status === 'fulfilled' ? alertStats.value : { unacknowledged_alerts: 0 }
 
         // Calcular estadísticas combinadas
         const totalStudents = safeAuthUsers?.length || 0
-        const atRiskStudents = safeRiskAlerts?.filter((alert: any) => 
-          alert.riskLevel === 'alto' || alert.riskLevel === 'crítico'
-        )?.length || 0
+        const atRiskStudents = safeRiskStats?.users_at_risk || 0
         const activeAlerts = safeAlertStats?.unacknowledged_alerts || 0
         const totalEvents = safeEventsStats?.total_events || 0
         const institutions = new Set(safeAuthUsers?.map((user: any) => user.institution).filter(Boolean)).size || 0
@@ -83,7 +90,12 @@ const Dashboard: React.FC = () => {
           totalEvents,
           institutions
         })
-        setError(null)
+        
+        if (errors.length > 0) {
+          setError(`Algunos servicios no están disponibles: ${errors.join(', ')}`)
+        } else {
+          setError(null)
+        }
       } catch (error) {
         console.error('Error al cargar estadísticas:', error)
         setError('Algunos servicios no están disponibles. Mostrando datos de ejemplo.')

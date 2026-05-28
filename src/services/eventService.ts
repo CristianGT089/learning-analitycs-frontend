@@ -17,8 +17,25 @@ export interface EventItem {
 
 export const eventService = {
   getStats: async (): Promise<EventStats> => {
-    const res = await api.get('/event-capture/api/v1/stats')
-    return res.data
+    try {
+      const res = await api.get('/event-capture/api/v1/events')
+      const events = res.data || []
+      return {
+        total_events: events.length,
+        events_by_type: events.reduce((acc: any, event: any) => {
+          acc[event.event_type] = (acc[event.event_type] || 0) + 1
+          return acc
+        }, {}),
+        recent_events: events.slice(0, 5)
+      }
+    } catch (error) {
+      console.error('Failed to fetch event stats:', error)
+      return {
+        total_events: 0,
+        events_by_type: {},
+        recent_events: []
+      }
+    }
   },
 
   getEvents: async (params?: {

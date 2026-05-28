@@ -66,4 +66,14 @@ export const alertService = {
   resolve: async (alertId: string): Promise<void> => {
     await api.post(`/alert/api/v1/alerts/${alertId}/resolve`)
   },
+
+  createAlert: async (alertData: {
+    userId: string
+    riskLevel: string
+    alertType: string
+    message: string
+  }): Promise<AlertItem> => {
+    const res = await api.post('/alert/api/v1/alerts', alertData)
+    return mapAlert(res.data)
+  },
 }
