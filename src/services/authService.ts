@@ -1,7 +1,7 @@
 import api from './api'
 import { LoginCredentials, User } from '../types/auth'
 
-const AUTH_SERVICE_URL = import.meta.env.VITE_API_URL || 'https://gateway-production-bc87.up.railway.app'
+const AUTH_SERVICE_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'https://auth-service-production-7b6d.up.railway.app'
 
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<{ user: User; token: string }> => {
