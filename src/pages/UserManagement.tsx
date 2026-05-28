@@ -157,7 +157,8 @@ const UserManagement: React.FC = () => {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'admin': return <AdminPanelSettings color="secondary" />
-      case 'teacher': return <School color="primary" />
+      case 'teacher':
+      case 'professor': return <School color="primary" />
       case 'student': return <MenuBook color="success" />
       default: return <Person />
     }
@@ -166,7 +167,8 @@ const UserManagement: React.FC = () => {
   const getRoleLabel = (role: string) => {
     switch (role) {
       case 'admin': return 'Administrador'
-      case 'teacher': return 'Docente'
+      case 'teacher':
+      case 'professor': return 'Docente'
       case 'student': return 'Estudiante'
       default: return 'Usuario'
     }

@@ -1,5 +1,7 @@
 import api from './api'
 
+const ALERT_SERVICE_URL = import.meta.env.VITE_ALERT_SERVICE_URL || 'https://alert-service-production-5655.up.railway.app'
+
 export interface AlertItem {
   id: string
   studentId: string
@@ -50,21 +52,21 @@ const mapRiskLevel = (level: string): string => {
 
 export const alertService = {
   getAlerts: async (): Promise<AlertItem[]> => {
-    const res = await api.get('/alert/api/v1/alerts')
+    const res = await api.get(`${ALERT_SERVICE_URL}/api/v1/alerts`)
     return (res.data ?? []).map(mapAlert)
   },
 
   getStats: async (): Promise<AlertStats> => {
-    const res = await api.get('/alert/api/v1/alerts/stats')
+    const res = await api.get(`${ALERT_SERVICE_URL}/api/v1/alerts/stats`)
     return res.data
   },
 
   acknowledge: async (alertId: string): Promise<void> => {
-    await api.post(`/alert/api/v1/alerts/${alertId}/acknowledge`)
+    await api.post(`${ALERT_SERVICE_URL}/api/v1/alerts/${alertId}/acknowledge`)
   },
 
   resolve: async (alertId: string): Promise<void> => {
-    await api.post(`/alert/api/v1/alerts/${alertId}/resolve`)
+    await api.post(`${ALERT_SERVICE_URL}/api/v1/alerts/${alertId}/resolve`)
   },
 
   createAlert: async (alertData: {
@@ -73,7 +75,7 @@ export const alertService = {
     alertType: string
     message: string
   }): Promise<AlertItem> => {
-    const res = await api.post('/alert/api/v1/alerts', alertData)
+    const res = await api.post(`${ALERT_SERVICE_URL}/api/v1/alerts`, alertData)
     return mapAlert(res.data)
   },
 }

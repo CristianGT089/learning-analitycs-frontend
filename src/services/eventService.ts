@@ -1,5 +1,7 @@
 import api from './api'
 
+const EVENT_SERVICE_URL = import.meta.env.VITE_EVENT_SERVICE_URL || 'https://event-service-production-e1c9.up.railway.app'
+
 export interface EventStats {
   total_events: number
   unique_users: number
@@ -19,18 +21,8 @@ export interface EventItem {
 export const eventService = {
   getStats: async (): Promise<EventStats> => {
     try {
-      const res = await api.get('/event-capture/api/v1/events')
-      const events = res.data || []
-      return {
-        total_events: events.length,
-        unique_users: new Set(events.map((e: any) => e.user_id)).size,
-        event_types: events.reduce((acc: any, event: any) => {
-          acc[event.event_type] = (acc[event.event_type] || 0) + 1
-          return acc
-        }, {}),
-        avg_events_per_user: events.length / new Set(events.map((e: any) => e.user_id)).size,
-        recent_events: events.slice(0, 5)
-      }
+      const res = await api.get(`${EVENT_SERVICE_URL}/api/v1/events/stats`)
+      return res.data
     } catch (error) {
       console.error('Failed to fetch event stats:', error)
       return {
@@ -48,7 +40,7 @@ export const eventService = {
     courseId?: string
     limit?: number
   }): Promise<EventItem[]> => {
-    const res = await api.get('/event-capture/api/v1/events', { params })
+    const res = await api.get(`${EVENT_SERVICE_URL}/api/v1/events`, { params })
     return (res.data ?? []).map((raw: any) => ({
       id: raw.event_id ?? raw.id ?? '',
       eventType: raw.event_type ?? '',

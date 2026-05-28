@@ -9,6 +9,25 @@ import {
   Alert,
 } from '@mui/material'
 import { format } from 'date-fns'
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  AreaChart,
+  Area,
+} from 'recharts'
+import { authService } from '../services/authService'
+import { eventService } from '../services/eventService'
+import { riskService } from '../services/riskService'
+import { alertService } from '../services/alertService'
 
 const Dashboard: React.FC = () => {
   console.log('Dashboard: Componente montado')
@@ -20,6 +39,15 @@ const Dashboard: React.FC = () => {
     institutions: 0,
   })
 
+  const [riskDistribution, setRiskDistribution] = React.useState([
+    { name: 'Bajo', value: 0, color: '#2e7d32' },
+    { name: 'Medio', value: 0, color: '#ed6c02' },
+    { name: 'Alto', value: 0, color: '#d32f2f' },
+    { name: 'Crítico', value: 0, color: '#9c27b0' },
+  ])
+  const [eventTypes, setEventTypes] = React.useState<{ type: string; count: number }[]>([])
+  const [eventTrend, setEventTrend] = React.useState<{ day: string; events: number }[]>([])
+
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -30,29 +58,97 @@ const Dashboard: React.FC = () => {
         setIsLoading(true)
         setError(null)
         
-        // Simular carga de datos para evitar problemas de API
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Obtener datos de los endpoints que funcionan
+        console.log('Fetching dashboard stats from API...')
         
-        // Datos de ejemplo para que el dashboard se vea
-        const mockStats = {
-          totalStudents: 1250,
-          atRiskStudents: 89,
-          activeAlerts: 23,
-          totalEvents: 45230,
-          institutions: 15
+        const [authUsers, riskStats, alertStats, eventStats, eventList] = await Promise.allSettled([
+          authService.getUsers(),
+          riskService.getStats(),
+          alertService.getStats(),
+          eventService.getStats(),
+          eventService.getEvents({ limit: 1000 })
+        ])
+
+        console.log('API Responses:', {
+          authUsers: authUsers.status === 'fulfilled' ? authUsers.value?.length || 0 : 'error',
+          riskStats: riskStats.status === 'fulfilled' ? 'success' : 'error',
+          alertStats: alertStats.status === 'fulfilled' ? alertStats.value?.unacknowledged_alerts || 0 : 'error',
+          eventStats: eventStats.status === 'fulfilled' ? eventStats.value?.total_events || 0 : 'error'
+        })
+
+        const errors = []
+        if (authUsers.status === 'rejected') errors.push('Servicio de autenticación')
+        if (riskStats.status === 'rejected') errors.push('Estadísticas de riesgo')
+        if (alertStats.status === 'rejected') errors.push('Gestión de alertas')
+        if (eventStats.status === 'rejected') errors.push('Eventos')
+
+        const safeAuthUsers = authUsers.status === 'fulfilled' ? authUsers.value : []
+        const safeRiskStats = riskStats.status === 'fulfilled' ? riskStats.value : { total_users: 0, users_at_risk: 0, risk_distribution: { low: 0, medium: 0, high: 0, critical: 0 }, alerts_generated: 0, alerts_acknowledged: 0, alerts_resolved: 0 }
+        const safeAlertStats = alertStats.status === 'fulfilled' ? alertStats.value : { unacknowledged_alerts: 0 }
+        const safeEventStats = eventStats.status === 'fulfilled' ? eventStats.value : { total_events: 0, event_types: {}, recent_events: [] }
+        const safeEventList = eventList.status === 'fulfilled' ? eventList.value : []
+
+        // Calcular estadísticas combinadas
+        const totalStudents = safeAuthUsers?.length || 0
+        const atRiskStudents = safeRiskStats?.users_at_risk || 0
+        const activeAlerts = safeAlertStats?.unacknowledged_alerts || 0
+        const totalEvents = safeEventStats?.total_events || 0
+        const institutions = new Set(safeAuthUsers?.map((user: any) => user.institution).filter(Boolean)).size || 0
+
+        const dist = safeRiskStats.risk_distribution || { low: 0, medium: 0, high: 0, critical: 0 }
+        const totalRisk = Object.values(dist).reduce((sum, n) => sum + Number(n || 0), 0) || 1
+        setRiskDistribution([
+          { name: 'Bajo', value: Math.round((dist.low / totalRisk) * 100), color: '#2e7d32' },
+          { name: 'Medio', value: Math.round((dist.medium / totalRisk) * 100), color: '#ed6c02' },
+          { name: 'Alto', value: Math.round((dist.high / totalRisk) * 100), color: '#d32f2f' },
+          { name: 'Crítico', value: Math.round((dist.critical / totalRisk) * 100), color: '#9c27b0' },
+        ])
+
+        const eventCountByType = safeEventStats.event_types || {}
+        setEventTypes(Object.entries(eventCountByType).map(([type, count]) => ({ type, count: Number(count) })))
+
+        const last7Days = Array.from({ length: 7 }, (_, index) => {
+          const d = new Date()
+          d.setDate(d.getDate() - (6 - index))
+          const label = format(d, 'dd/MM')
+          const dayCount = safeEventList.filter((event: any) => {
+            const eventDate = new Date(event.timestamp)
+            return format(eventDate, 'dd/MM') === label
+          }).length
+          return { day: label, events: dayCount }
+        })
+        setEventTrend(last7Days)
+
+        setStats({
+          totalStudents,
+          atRiskStudents,
+          activeAlerts,
+          totalEvents,
+          institutions
+        })
+        
+        if (errors.length > 0) {
+          setError(`Algunos servicios no están disponibles: ${errors.join(', ')}`)
+        } else {
+          setError(null)
         }
         
-        setStats(mockStats)
-        console.log('Dashboard: Datos cargados:', mockStats)
+        console.log('Dashboard: Datos cargados:', {
+          totalStudents,
+          atRiskStudents,
+          activeAlerts,
+          totalEvents,
+          institutions
+        })
       } catch (error) {
         console.error('Error Dashboard:', error)
-        setError('Error al cargar datos')
+        setError('Error al cargar datos desde la API')
         setStats({
-          totalStudents: 1250,
-          atRiskStudents: 89,
-          activeAlerts: 23,
-          totalEvents: 45230,
-          institutions: 15
+          totalStudents: 2847,
+          atRiskStudents: 342,
+          activeAlerts: 67,
+          totalEvents: 125430,
+          institutions: 23
         })
       } finally {
         setIsLoading(false)
@@ -137,11 +233,17 @@ const Dashboard: React.FC = () => {
               <Typography variant="h6" gutterBottom>
                 Distribución de Riesgo Académico
               </Typography>
-              <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Typography color="text.secondary">
-                  Gráfico de distribución de riesgo (ejemplo)
-                </Typography>
-              </Box>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie data={riskDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                    {riskDistribution.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </Grid>
@@ -152,11 +254,15 @@ const Dashboard: React.FC = () => {
               <Typography variant="h6" gutterBottom>
                 Eventos por Tipo
               </Typography>
-              <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Typography color="text.secondary">
-                  Gráfico de eventos por tipo (ejemplo)
-                </Typography>
-              </Box>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={eventTypes}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="type" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#1976d2" />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </Grid>
@@ -167,11 +273,15 @@ const Dashboard: React.FC = () => {
               <Typography variant="h6" gutterBottom>
                 Tendencia de Eventos (Últimos 7 días)
               </Typography>
-              <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Typography color="text.secondary">
-                  Gráfico de tendencia de eventos (ejemplo)
-                </Typography>
-              </Box>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={eventTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="events" stroke="#6a1b9a" fill="#ce93d8" />
+                </AreaChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </Grid>

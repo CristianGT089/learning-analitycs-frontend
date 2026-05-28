@@ -1,5 +1,7 @@
 import api from './api'
 
+const RISK_SERVICE_URL = import.meta.env.VITE_RISK_SERVICE_URL || 'https://academic-risk-service-production.up.railway.app'
+
 export interface RiskAlert {
   id: string
   studentId: string
@@ -59,20 +61,20 @@ const mapRiskAlert = (raw: any): RiskAlert => ({
 
 export const riskService = {
   getAlerts: async (): Promise<RiskAlert[]> => {
-    const res = await api.get('/academic-risk/api/v1/risk/alerts')
+    const res = await api.get(`${RISK_SERVICE_URL}/api/v1/risk/alerts`)
     return (res.data ?? []).map(mapRiskAlert)
   },
 
   getStats: async (): Promise<RiskStats> => {
-    const res = await api.get('/academic-risk/api/v1/risk/stats')
+    const res = await api.get(`${RISK_SERVICE_URL}/api/v1/risk/stats`)
     return res.data
   },
 
   acknowledge: async (alertId: string): Promise<void> => {
-    await api.post(`/academic-risk/api/v1/risk/alerts/${alertId}/acknowledge`)
+    await api.post(`${RISK_SERVICE_URL}/api/v1/risk/alerts/${alertId}/acknowledge`)
   },
 
   resolve: async (alertId: string): Promise<void> => {
-    await api.post(`/academic-risk/api/v1/risk/alerts/${alertId}/resolve`)
+    await api.post(`${RISK_SERVICE_URL}/api/v1/risk/alerts/${alertId}/resolve`)
   },
 }
