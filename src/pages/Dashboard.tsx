@@ -8,21 +8,6 @@ import {
   LinearProgress,
   Alert,
 } from '@mui/material'
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts'
 import { format } from 'date-fns'
 import api from '../services/api'
 import { authService } from '../services/authService'
@@ -31,6 +16,7 @@ import { riskService } from '../services/riskService'
 import { alertService } from '../services/alertService'
 
 const Dashboard: React.FC = () => {
+  console.log('Dashboard: Componente montado')
   const [stats, setStats] = React.useState({
     totalStudents: 0,
     atRiskStudents: 0,
@@ -43,18 +29,20 @@ const Dashboard: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
-    const fetchDashboardStats = async () => {
-      try {
-        // Obtener estadísticas de cada servicio usando el API centralizado
-        console.log('Fetching dashboard stats...')
-        
-        const [authUsers, eventsStats, riskAlerts, riskStats, alertStats] = await Promise.allSettled([
-          authService.getUsers(),
-          eventService.getStats(),
-          riskService.getAlerts(),
-          riskService.getStats(),
-          alertService.getStats()
-        ])
+    try {
+      console.log('Dashboard: useEffect ejecutado')
+      const fetchDashboardStats = async () => {
+        try {
+          // Obtener estadísticas de cada servicio usando el API centralizado
+          console.log('Fetching dashboard stats...')
+          
+          const [authUsers, eventsStats, riskAlerts, riskStats, alertStats] = await Promise.allSettled([
+            authService.getUsers(),
+            eventService.getStats(),
+            riskService.getAlerts(),
+            riskService.getStats(),
+            alertService.getStats()
+          ])
 
         console.log('API Responses:', {
           authUsers: authUsers.status === 'fulfilled' ? authUsers.value?.length || 0 : 'error',
@@ -107,15 +95,25 @@ const Dashboard: React.FC = () => {
           totalEvents: 45230,
           institutions: 15
         })
-      } finally {
-        setIsLoading(false)
+        } finally {
+          console.log('Dashboard: Finalizando fetch, setLoading(false)')
+          setIsLoading(false)
+        }
       }
-    }
 
+    console.log('Dashboard: Llamando a fetchDashboardStats')
     fetchDashboardStats()
+    } catch (error) {
+      console.error('Error en useEffect del Dashboard:', error)
+      setError('Error al cargar el dashboard. Intenta recargar la página.')
+      setIsLoading(false)
+    }
   }, [])
 
+  console.log('Dashboard: Renderizando - isLoading:', isLoading, 'error:', error)
+
   if (isLoading) {
+    console.log('Dashboard: Mostrando loader')
     return (
       <Box sx={{ mt: 2 }}>
         <LinearProgress />
@@ -124,6 +122,7 @@ const Dashboard: React.FC = () => {
   }
 
   if (error) {
+    console.log('Dashboard: Mostrando error:', error)
     return (
       <Box>
         <Typography variant="h4" gutterBottom>
@@ -171,6 +170,7 @@ const Dashboard: React.FC = () => {
     { label: 'Instituciones', value: stats.institutions, color: undefined },
   ]
 
+  console.log('Dashboard: Renderizando contenido completo')
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
@@ -204,74 +204,74 @@ const Dashboard: React.FC = () => {
         ))}
       </Grid>
 
-      <Grid container spacing={3}>
-        <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Distribución de Riesgo Académico
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={riskData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {riskData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
+       <Grid container spacing={3}>
+         <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
+           <Card>
+             <CardContent>
+               <Typography variant="h6" gutterBottom>
+                 Distribución de Riesgo Académico
+               </Typography>
+               {/* <ResponsiveContainer width="100%" height={300}>
+                 <PieChart>
+                   <Pie
+                     data={riskData}
+                     dataKey="value"
+                     nameKey="name"
+                     cx="50%"
+                     cy="50%"
+                     outerRadius={80}
+                     label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                   >
+                     {riskData.map((entry, index) => (
+                       <Cell key={`cell-${index}`} fill={entry.color} />
+                     ))}
+                   </Pie>
+                   <Tooltip />
+                 </PieChart>
+               </ResponsiveContainer> */}
+             </CardContent>
+           </Card>
+         </Grid>
 
-        <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Eventos por Tipo
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={eventTypes}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#8884d8" name="Eventos" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
+         <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
+           <Card>
+             <CardContent>
+               <Typography variant="h6" gutterBottom>
+                 Eventos por Tipo
+               </Typography>
+               {/* <ResponsiveContainer width="100%" height={300}>
+                 <BarChart data={eventTypes}>
+                   <CartesianGrid strokeDasharray="3 3" />
+                   <XAxis dataKey="name" />
+                   <YAxis />
+                   <Tooltip />
+                   <Bar dataKey="value" fill="#8884d8" name="Eventos" />
+                 </BarChart>
+               </ResponsiveContainer> */}
+             </CardContent>
+           </Card>
+         </Grid>
 
-        <Grid sx={{ width: '100%' }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Tendencia de Eventos (Últimos 7 días)
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="events" stroke="#8884d8" name="Eventos" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+         <Grid sx={{ width: '100%' }}>
+           <Card>
+             <CardContent>
+               <Typography variant="h6" gutterBottom>
+                 Tendencia de Eventos (Últimos 7 días)
+               </Typography>
+               {/* <ResponsiveContainer width="100%" height={300}>
+                 <LineChart data={trendData}>
+                   <CartesianGrid strokeDasharray="3 3" />
+                   <XAxis dataKey="date" />
+                   <YAxis />
+                   <Tooltip />
+                   <Legend />
+                   <Line type="monotone" dataKey="events" stroke="#8884d8" name="Eventos" />
+                 </LineChart>
+               </ResponsiveContainer> */}
+             </CardContent>
+           </Card>
+         </Grid>
+       </Grid>
     </Box>
   )
 }
